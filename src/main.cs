@@ -28,13 +28,14 @@ class Program
                     Console.WriteLine(echoOutput);
                     continue;
                 case "type":
-                    string typeArg = command.Length < 5 ? "" : command.Substring(5).TrimEnd(); // Get everything after "type "
+                    string typeArg = command.Length < 5 ? "" : command.Substring(5).TrimEnd().ToLower(); // Get everything after "type "
                     switch (typeArg)
                     {
                         case "help":
                         case "exit":
                         case "echo":
-                            Console.WriteLine($"{typeArg.ToLower()} is a shell builtin");
+                        case "type":
+                            Console.WriteLine($"{typeArg} is a shell builtin");
                             continue;
                         case "":
                             Console.WriteLine("type: not enough arguments");
