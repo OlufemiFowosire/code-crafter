@@ -34,7 +34,7 @@ class Program
                         case "help":
                         case "exit":
                         case "echo":
-                            Console.WriteLine($"{typeArg.ToLower()} is a shell built-in command.");
+                            Console.WriteLine($"{typeArg.ToLower()} is a shell builtin");
                             continue;
                         case "":
                             Console.WriteLine("type: not enough arguments");
