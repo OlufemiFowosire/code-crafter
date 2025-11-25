@@ -32,7 +32,7 @@ class Program
                 if (path != null)
                 {
                     var process = new Process();
-                    process.StartInfo.FileName = path;
+                    process.StartInfo.FileName = command;
                     process.StartInfo.Arguments = string.Join(' ', tokens.Skip(1));
                     process.StartInfo.UseShellExecute = false;
                     process.StartInfo.RedirectStandardOutput = false;
