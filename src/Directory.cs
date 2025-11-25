@@ -68,7 +68,6 @@ internal class Directory
     {
         if (!IsDirectory(path))
         {
-            PrintError($"no such file or directory: {path}");
             return false;
         }
         return true;

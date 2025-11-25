@@ -3,7 +3,10 @@ internal class CdCommand : IBuiltinCommand
     public string Name { get; } = "cd";
     public int Execute(string[] args)
     {
-        Environment.CurrentDirectory = Directory.GetTargetDirectory(args);
+        if (!Directory.ChangeToTargetDirectory(args))
+        {
+            return 1;
+        }
         return 0;
     }
 }
