@@ -8,7 +8,8 @@ class Program
         {
             ["exit"] = new ExitCommand(),
             ["echo"] = new EchoCommand(),
-            ["pwd"] = new PwdCommand()
+            ["pwd"] = new PwdCommand(),
+            ["cd"] = new CdCommand(),
         };
         var executableDirectories = new ExecutableDirectories();
         validCommands["type"] = new TypeCommand(validCommands, executableDirectories);
