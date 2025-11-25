@@ -17,7 +17,7 @@ internal class ExecutableDirectories
         // 3. The Search (using SelectMany to flatten the loops)
         return paths
             .SelectMany(dir => extensions, (dir, ext) => Path.Combine(dir, programName + ext))
-            .OrderBy(fullPath => fullPath) // 4. Lexicographical Order
+            .OrderByDescending(fullPath => fullPath) // 4. Lexicographical Order
             .FirstOrDefault(fullPath => File.Exists(fullPath));
     }
 }
