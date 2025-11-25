@@ -2,7 +2,6 @@ internal class ExecutableDirectories
 {
     // We can cache the directories so we don't re-read the environment every time
     private readonly IEnumerable<string> paths;
-    private readonly IEnumerable<string> extensions;
 
     public ExecutableDirectories()
     {

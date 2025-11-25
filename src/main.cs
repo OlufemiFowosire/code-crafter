@@ -28,7 +28,7 @@ class Program
             if (!validCommands.ContainsKey(command))
             {
                 Console.WriteLine($"{command}: command not found");
-                break;
+                continue;
             }
             validCommands[command].Execute(tokens.Skip(1).ToArray());
         }
