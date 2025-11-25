@@ -14,7 +14,7 @@ internal class Directory
         }
         catch (DirectoryNotFoundException)
         {
-            Console.WriteLine($"cd: no such file or directory: {path}");
+            Console.WriteLine($"cd: {path} no such file or directory");
             return false;
         }
     }
@@ -49,7 +49,7 @@ internal class Directory
         {
             return GetHomeDirectory();
         }
-        else if (args[0] == "~")
+        else if (args[0] == "..")
         {
             return GetParentDirectory();
         }
@@ -61,7 +61,7 @@ internal class Directory
 
     public static void PrintError(string message)
     {
-        Console.WriteLine($"cd: {message}");
+        Console.WriteLine($"{message}");
     }
 
     public static bool ValidateDirectory(string path)
@@ -84,62 +84,11 @@ internal class Directory
         return ChangeDirectory(targetDirectory);
     }
 
-    public static void PrintCurrentDirectory()
-    {
-        Console.WriteLine(GetCurrentDirectory());
-    }
-
-    public static string GetAbsolutePath(string path)
-    {
-        return Path.GetFullPath(ResolvePath(path));
-    }
-
-    public static string GetAbsoluteCurrentDirectory()
-    {
-        return GetAbsolutePath(GetCurrentDirectory());
-    }
-
-    public static string GetAbsoluteParentDirectory()
-    {
-        return GetAbsolutePath(GetParentDirectory());
-    }
-
-    public static string GetAbsoluteTargetDirectory(string[] args)
-    {
-        return GetAbsolutePath(GetTargetDirectory(args));
-    }
-
     public static bool IsValidTargetDirectory(string[] args)
     {
         string targetDirectory = GetTargetDirectory(args);
         return ValidateDirectory(targetDirectory);
     }
-
-    public static bool ChangeToAbsoluteTargetDirectory(string[] args)
-    {
-        string targetDirectory = GetAbsoluteTargetDirectory(args);
-        if (!ValidateDirectory(targetDirectory))
-        {
-            return false;
-        }
-        return ChangeDirectory(targetDirectory);
-    }
-
-    public static void PrintAbsoluteCurrentDirectory()
-    {
-        Console.WriteLine(GetAbsoluteCurrentDirectory());
-    }
-
-    public static void PrintAbsoluteTargetDirectory(string[] args)
-    {
-        Console.WriteLine(GetAbsoluteTargetDirectory(args));
-    }
-
-    public static void PrintAbsoluteParentDirectory()
-    {
-        Console.WriteLine(GetAbsoluteParentDirectory());
-    }
-
     public static void PrintTargetDirectory(string[] args)
     {
         Console.WriteLine(GetTargetDirectory(args));
@@ -148,5 +97,9 @@ internal class Directory
     public static void PrintParentDirectory()
     {
         Console.WriteLine(GetParentDirectory());
+    }
+    public static void PrintCurrentDirectory()
+    {
+        Console.WriteLine(GetCurrentDirectory());
     }
 }

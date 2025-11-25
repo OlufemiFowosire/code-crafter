@@ -1,6 +1,6 @@
 internal class PwdCommand : IBuiltinCommand
 {
-    public string Name { get; } = "echo";
+    public string Name { get; } = "pwd";
     public int Execute(string[] args)
     {
         if (args.Length > 0)
