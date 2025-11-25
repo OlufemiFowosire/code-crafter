@@ -7,7 +7,8 @@ class Program
         var validCommands = new Dictionary<string, IBuiltinCommand>()
         {
             ["exit"] = new ExitCommand(),
-            ["echo"] = new EchoCommand()
+            ["echo"] = new EchoCommand(),
+            ["pwd"] = new PwdCommand()
         };
         var executableDirectories = new ExecutableDirectories();
         validCommands["type"] = new TypeCommand(validCommands, executableDirectories);
