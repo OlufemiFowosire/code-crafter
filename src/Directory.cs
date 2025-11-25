@@ -53,6 +53,10 @@ internal class Directory
         {
             return GetParentDirectory();
         }
+        else if (args[0] == "~")
+        {
+            return GetHomeDirectory();
+        }
         else
         {
             return ResolvePath(args[0]);
