@@ -10,7 +10,7 @@ internal class CdCommand : IBuiltinCommand
         }
         else if (args.Length == 1 && !Directory.IsValidTargetDirectory(args))
         {
-            Console.WriteLine($"cd: {args[0]}: No such file or directory");
+            // Directory.PrintError($"{args[0]}: No such file or directory");
             return 1;
         }
         else if (args.Length > 1)
