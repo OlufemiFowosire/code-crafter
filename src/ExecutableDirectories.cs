@@ -8,16 +8,16 @@ internal class ExecutableDirectories
     {
         string pathVariable = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
         paths = pathVariable.Split(Path.PathSeparator);
-        string pathExt = Environment.GetEnvironmentVariable("PATHEXT") ?? string.Empty;
-        extensions = pathExt.Split(Path.PathSeparator).Prepend("");
     }
 
     public string? GetProgramPath(string programName)
     {
         // 3. The Search (using SelectMany to flatten the loops)
-        return paths
+        /**return paths
             .SelectMany(dir => extensions, (dir, ext) => Path.Combine(dir, programName + ext))
             .OrderByDescending(fullPath => fullPath) // 4. Lexicographical Order
-            .FirstOrDefault(fullPath => File.Exists(fullPath));
+            .FirstOrDefault(fullPath => File.Exists(fullPath));**/
+        return paths.Select(dir => Path.Combine(dir, programName))
+                    .FirstOrDefault(fullPath => File.Exists(fullPath));
     }
 }
