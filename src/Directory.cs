@@ -76,10 +76,6 @@ internal class Directory
     public static bool ChangeToTargetDirectory(string[] args)
     {
         string targetDirectory = GetTargetDirectory(args);
-        if (!ValidateDirectory(targetDirectory))
-        {
-            return false;
-        }
         return ChangeDirectory(targetDirectory);
     }
 
