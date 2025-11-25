@@ -16,9 +16,7 @@ internal class ExecutableDirectories
     {
         // 3. The Search (using SelectMany to flatten the loops)
         return paths
-            .FirstOrDefault(dir =>
-                extensions
-                    .Select(ext => Path.Combine(dir, programName + ext))
-                    .Any(fullPath => File.Exists(fullPath)));
+            .SelectMany(dir => extensions, (dir, ext) => Path.Combine(dir, programName + ext))
+            .FirstOrDefault(fullPath => File.Exists(fullPath));
     }
 }
