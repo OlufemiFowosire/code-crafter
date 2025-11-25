@@ -9,8 +9,7 @@ class Program
             ["echo"] = new EchoCommand()
         };
         var executableDirectories = new ExecutableDirectories();
-        var typeCommand = new TypeCommand(validCommands, executableDirectories);
-        validCommands["type"] = typeCommand;
+        validCommands["type"] = new TypeCommand(validCommands, executableDirectories);
 
         while (true)
         {
@@ -18,31 +17,15 @@ class Program
             Console.Write("$ ");
 
             // Captures the user's command in the "command" variable
-            string? command = Console.ReadLine()?.Trim();
+            string? input = Console.ReadLine()?.Trim();
 
-            if (string.IsNullOrEmpty(command))
+            if (string.IsNullOrEmpty(input))
             {
                 break;
             }
-            string token = command.Split(' ')[0].ToLower() ?? $"{command}";
-            switch (token)
-            {
-                case "exit":
-                    validCommands["exit"].Execute(command.Split(' '));
-                    return;
-                case "echo":
-                    // Handled separately below
-                    string echoOutput = command.Length < 5 ? "" : command.Substring(5); // Get everything after "echo "
-                    validCommands["echo"].Execute(new string[] { "echo", echoOutput });
-                    continue;
-                case "type":
-                    string typeArg = command.Length < 5 ? "" : command.Substring(5).TrimEnd().ToLower(); // Get everything after "type "
-                    typeCommand.Execute(new string[] { "type", typeArg });
-                    continue;
-                default:
-                    Console.WriteLine($"{command}: command not found");
-                    continue;
-            }
+            string[] tokens = input.Split(' ') ?? [$"{input}"];
+            string command = tokens[0];
+            validCommands[command].Execute(tokens.Skip(1).ToArray());
         }
     }
 }
