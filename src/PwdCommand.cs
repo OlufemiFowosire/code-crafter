@@ -8,8 +8,7 @@ internal class PwdCommand : IBuiltinCommand
             Console.WriteLine("pwd: too many arguments");
             return 1;
         }
-        string output = Environment.CurrentDirectory;
-        Console.WriteLine(output);
+        Directory.PrintCurrentDirectory();
         return 0;
     }
 }
