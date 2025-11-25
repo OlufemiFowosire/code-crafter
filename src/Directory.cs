@@ -14,7 +14,7 @@ internal class Directory
         }
         catch (DirectoryNotFoundException)
         {
-            Console.WriteLine($"cd: {path} no such file or directory");
+            Console.WriteLine($"cd: {path}: No such file or directory");
             return false;
         }
     }
