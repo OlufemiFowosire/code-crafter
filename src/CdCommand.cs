@@ -4,7 +4,7 @@ internal class CdCommand : IBuiltinCommand
     public int Execute(string[] args)
     {
         string directory = args.Length > 0 ? Directory.GetAbsoluteTargetDirectory(args) : Directory.GetHomeDirectory();
-        Console.WriteLine($"$ {directory}");
+        Console.WriteLine($"{directory}");
         return 0;
     }
 }
