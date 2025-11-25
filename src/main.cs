@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 class Program
 {
@@ -27,8 +28,24 @@ class Program
             string command = tokens[0];
             if (!validCommands.ContainsKey(command))
             {
-                Console.WriteLine($"{command}: command not found");
-                continue;
+                string? path = executableDirectories.GetProgramPath(command);
+                if (path != null)
+                {
+                    var process = new Process();
+                    process.StartInfo.FileName = path;
+                    process.StartInfo.Arguments = string.Join(' ', tokens.Skip(1));
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.RedirectStandardOutput = false;
+                    process.StartInfo.RedirectStandardError = false;
+                    process.Start();
+                    process.WaitForExit();
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine($"{command}: command not found");
+                    continue;
+                }
             }
             validCommands[command].Execute(tokens.Skip(1).ToArray());
         }
