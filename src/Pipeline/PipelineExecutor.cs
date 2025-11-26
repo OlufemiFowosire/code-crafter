@@ -103,9 +103,10 @@ public class PipelineExecutor
                 // Create the client (Reader) handle
                 var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
 
-                // CRITICAL FIX: Release the server's copy of the client handle.
-                // This ensures the reader detects EOF correctly when the writer (server) closes.
-                pipeServer.DisposeLocalCopyOfClientHandle();
+                // Note: We removed DisposeLocalCopyOfClientHandle() here because in an in-process
+                // threading model, disposing the server (Write) end is sufficient to signal EOF.
+                // Explicitly disposing the handle copy can sometimes invalidate the pipe client 
+                // depending on how the OS handle inheritance is managed in this environment.
 
                 sourceStream = pipeClient;
             }
