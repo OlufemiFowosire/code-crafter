@@ -8,6 +8,7 @@ public class CompletionEngine(IEnumerable<ICompletionSource> sources)
         return _sources
             .SelectMany(s => s.GetOptions())
             .Where(name => name.StartsWith(prefix)) // Case-sensitive for CodeCrafters usually
+            .Distinct() // <--- ADD THIS LINE to remove duplicates
             .OrderBy(name => name) // Alphabetical order is required for the "List" feature
             .ToList();
     }
