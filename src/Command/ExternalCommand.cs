@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes; // Added for PipeStream check
 using System.Threading.Tasks;
 
 internal class ExternalCommand(string commandName) : ICommand
@@ -62,8 +63,13 @@ internal class ExternalCommand(string commandName) : ICommand
                 try
                 {
                     await process.StandardOutput.BaseStream.CopyToAsync(stdout);
-                    // CRITICAL FIX: Force the buffer to write to the pipe immediately
-                    await stdout.FlushAsync();
+
+                    // CRITICAL FIX: Only flush if it is a Pipe. 
+                    // Flushing ConsoleStream (System.IO.Stream) can cause hangs/errors in test runners.
+                    if (stdout is PipeStream)
+                    {
+                        await stdout.FlushAsync();
+                    }
                 }
                 catch (IOException) { }
             }));
@@ -74,7 +80,10 @@ internal class ExternalCommand(string commandName) : ICommand
                 try
                 {
                     await process.StandardError.BaseStream.CopyToAsync(stderr);
-                    await stderr.FlushAsync();
+                    if (stderr is PipeStream)
+                    {
+                        await stderr.FlushAsync();
+                    }
                 }
                 catch (IOException) { }
             }));
