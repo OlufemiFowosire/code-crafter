@@ -13,10 +13,12 @@ internal class TypeCommand(Dictionary<string, int> builtins) : IBuiltinCommand
             if (builtins.ContainsKey(args[0]))
             {
                 Console.WriteLine($"{args[0]} is a shell builtin");
+                return;
             }
             if (path != null)
             {
                 Console.WriteLine($"{args[0]} is an external command");
+                return;
             }
             throw new ArgumentException($"{args[0]}: not found");
         }
