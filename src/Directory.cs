@@ -64,42 +64,24 @@ internal class Directory
         }
     }
 
-    public static void PrintError(string message)
-    {
-        Console.WriteLine($"{message}");
-    }
-
-    public static bool ValidateDirectory(string path)
-    {
-        if (!IsDirectory(path))
-        {
-            return false;
-        }
-        return true;
-    }
-
     public static bool ChangeToTargetDirectory(string[] args)
     {
         string targetDirectory = GetTargetDirectory(args);
         return ChangeDirectory(targetDirectory);
     }
 
-    public static bool IsValidTargetDirectory(string[] args)
-    {
-        string targetDirectory = GetTargetDirectory(args);
-        return ValidateDirectory(targetDirectory);
-    }
-    public static void PrintTargetDirectory(string[] args)
-    {
-        Console.WriteLine(GetTargetDirectory(args));
-    }
-
-    public static void PrintParentDirectory()
-    {
-        Console.WriteLine(GetParentDirectory());
-    }
     public static void PrintCurrentDirectory()
     {
         Console.WriteLine(GetCurrentDirectory());
+    }
+
+    public static IEnumerable<string> ListDirectories(string path)
+    {
+        return System.IO.Directory.EnumerateDirectories(path);
+    }
+
+    public static IEnumerable<string> ListFiles(string path)
+    {
+        return System.IO.Directory.EnumerateFiles(path);
     }
 }

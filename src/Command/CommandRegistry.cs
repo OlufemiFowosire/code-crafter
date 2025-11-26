@@ -31,4 +31,5 @@ internal class CommandRegistry
         command = null;
         return false;
     }
+    public static IEnumerable<string> GetAllBuiltinNames() => _builtins.Keys;
 }

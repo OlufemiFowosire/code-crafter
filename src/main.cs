@@ -5,12 +5,21 @@ class Program
 {
     static void Main()
     {
+        // 1. Setup Autocomplete System
+        var sources = new List<ICompletionSource>
+        {
+            new BuiltinCompletionSource(),
+            new ExecutableCompletionSource()
+        };
+        var engine = new CompletionEngine(sources);
+        var lineEditor = new LineEditor(engine);
         while (true)
         {
-            // TODO: Uncomment the code below to pass the first stage
-            Console.Write("$ ");
-            // Captures the user's command in the "command" variable
-            string? input = Console.ReadLine()?.Trim();
+            // REPLACED: Console.Write("$ "); string input = Console.ReadLine();
+            // WITH:
+            string input = lineEditor.ReadLine("$ ");
+
+            if (string.IsNullOrWhiteSpace(input)) continue;
             // Use your existing quote parser to split string
             string[] rawArgs = ShellParser.Parse(input!);
 
