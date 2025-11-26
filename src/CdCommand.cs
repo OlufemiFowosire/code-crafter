@@ -9,7 +9,7 @@ internal class CdCommand : IBuiltinCommand
         }
         catch (DirectoryNotFoundException)
         {
-            throw new DirectoryNotFoundException($"cd: {args}: No such file or directory");
+            throw new DirectoryNotFoundException($"cd: {args[0]}: No such file or directory");
         }
     }
 }
