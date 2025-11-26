@@ -1,12 +1,10 @@
 internal class PwdCommand : IBuiltinCommand
 {
     public string Name { get; } = "pwd";
-    public void Execute(string[] args)
+    public async Task ExecuteAsync(string[] args, Stream stdin, Stream stdout, Stream stderr)
     {
-        if (args.Length > 0)
-        {
-            Console.WriteLine("pwd: too many arguments");
-        }
-        Directory.PrintCurrentDirectory();
+        using var writer = new StreamWriter(stdout, leaveOpen: true);
+        // Note: Pwd writes to stdout
+        await writer.WriteLineAsync(Directory.GetCurrentDirectory());
     }
 }
