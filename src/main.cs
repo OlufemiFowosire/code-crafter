@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 class Program
@@ -38,6 +39,10 @@ class Program
             catch (ArgumentException a)
             {
                 Console.WriteLine($"{a.Message}");
+            }
+            catch (Win32Exception w)
+            {
+                Console.WriteLine($"{w.Message}");
             }
             catch (Exception ex)
             {
