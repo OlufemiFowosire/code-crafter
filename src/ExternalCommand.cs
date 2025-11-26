@@ -4,9 +4,9 @@ internal class ExternalCommand(string commandName) : ICommand
     public string Name { get; } = "external";
     public int Execute(string[] args)
     {
-        Console.WriteLine($"Executing external command...{commandName}");
+        //Console.WriteLine($"Executing external command...{commandName}");
         string? path = ExecutableDirectories.GetProgramPath(commandName);
-        Console.WriteLine($"Path found: {path}");
+        //Console.WriteLine($"Path found: {path}");
         if (path != null)
         {
             var process = new Process();
