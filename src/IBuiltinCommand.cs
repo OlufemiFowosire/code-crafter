@@ -1,5 +1,3 @@
-interface IBuiltinCommand
+interface IBuiltinCommand : ICommand
 {
-    string Name { get; }
-    int Execute(string[] args);
 }

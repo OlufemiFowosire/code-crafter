@@ -7,16 +7,17 @@ internal class Directory
 
     public static bool ChangeDirectory(string path)
     {
+        bool status = false;
         try
         {
             Environment.CurrentDirectory = path;
-            return true;
+            status = true;
         }
         catch (DirectoryNotFoundException)
         {
-            Console.WriteLine($"cd: {path}: No such file or directory");
-            return false;
+            throw;
         }
+        return status;
     }
 
     public static string GetHomeDirectory()

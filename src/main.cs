@@ -4,52 +4,33 @@ class Program
 {
     static void Main()
     {
-        var validCommands = new Dictionary<string, IBuiltinCommand>()
-        {
-            ["exit"] = new ExitCommand(),
-            ["echo"] = new EchoCommand(),
-            ["pwd"] = new PwdCommand(),
-            ["cd"] = new CdCommand(),
-        };
-        var executableDirectories = new ExecutableDirectories();
-        validCommands["type"] = new TypeCommand(validCommands, executableDirectories);
-
         while (true)
         {
             // TODO: Uncomment the code below to pass the first stage
             Console.Write("$ ");
 
-            // Captures the user's command in the "command" variable
-            string? input = Console.ReadLine()?.Trim();
+            try
+            {
+                // Captures the user's command in the "command" variable
+                string? input = Console.ReadLine()?.Trim();
 
-            if (string.IsNullOrEmpty(input))
-            {
-                break;
+
+                string[] tokens = Argument.Parse(input!);
+                string command = tokens[0];
+                CommandsFactory.Handle(command, tokens.Skip(1).ToArray());
             }
-            string[] tokens = input.Split(' ') ?? [$"{input}"];
-            string command = tokens[0];
-            if (!validCommands.ContainsKey(command))
+            catch (DirectoryNotFoundException path)
             {
-                string? path = executableDirectories.GetProgramPath(command);
-                if (path != null)
-                {
-                    var process = new Process();
-                    process.StartInfo.FileName = command;
-                    process.StartInfo.Arguments = string.Join(' ', tokens.Skip(1));
-                    process.StartInfo.UseShellExecute = false;
-                    process.StartInfo.RedirectStandardOutput = false;
-                    process.StartInfo.RedirectStandardError = false;
-                    process.Start();
-                    process.WaitForExit();
-                    continue;
-                }
-                else
-                {
-                    Console.WriteLine($"{command}: command not found");
-                    continue;
-                }
+                Console.WriteLine($"cd: {path}: No such file or directory");
             }
-            validCommands[command].Execute(tokens.Skip(1).ToArray());
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
     }
 }
