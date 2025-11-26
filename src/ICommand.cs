@@ -1,5 +1,5 @@
 interface ICommand
 {
     string Name { get; }
-    int Execute(string[] args);
+    void Execute(string[] args);
 }

@@ -1,7 +1,7 @@
 internal class CdCommand : IBuiltinCommand
 {
     public string Name { get; } = "cd";
-    public int Execute(string[] args)
+    public void Execute(string[] args)
     {
         try
         {
@@ -11,6 +11,5 @@ internal class CdCommand : IBuiltinCommand
         {
             throw;
         }
-        return 0;
     }
 }
