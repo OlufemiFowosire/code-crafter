@@ -9,16 +9,12 @@ public class PipelineExecutor
 {
     public async Task ExecutePipelineAsync(string[] allTokens)
     {
-        // 1. Split tokens by "|"
         var segments = SplitPipeline(allTokens);
         if (segments.Count == 0) return;
 
         var tasks = new List<Task>();
         var pipes = new List<AnonymousPipeServerStream>();
 
-        // The input for the current command (Starts with Console Input or Empty)
-        // We use Console.OpenStandardInput() to allow interactive piping if needed, 
-        // but for this shell, usually Stream.Null or non-interactive Console In.
         Stream sourceStream = Stream.Null;
 
         for (int i = 0; i < segments.Count; i++)
@@ -26,8 +22,6 @@ public class PipelineExecutor
             var segmentArgs = segments[i];
             bool isLast = (i == segments.Count - 1);
 
-            // 2. Parse Redirection for THIS specific command segment
-            // We use your existing RedirectionParser logic here
             RedirectionConfig config = RedirectionParser.Parse(segmentArgs);
 
             if (config.Arguments.Count == 0) continue;
@@ -35,11 +29,10 @@ public class PipelineExecutor
             string cmdName = config.Arguments[0];
             string[] cmdArgs = config.Arguments.Skip(1).ToArray();
 
-            // 3. Determine Output Stream
             Stream destStream;
             Stream errorStream;
 
-            // Handle Output Redirection (>)
+            // Output Stream Setup
             if (config.StdOutPath != null)
             {
                 var mode = config.AppendStdOut ? FileMode.Append : FileMode.Create;
@@ -47,18 +40,16 @@ public class PipelineExecutor
             }
             else if (isLast)
             {
-                // If it's the last command and no redirection, write to Console
                 destStream = Console.OpenStandardOutput();
             }
             else
             {
-                // Otherwise, pipe to the next command
                 var pipe = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
                 pipes.Add(pipe);
                 destStream = pipe;
             }
 
-            // Handle Error Redirection (2>)
+            // Error Stream Setup
             if (config.StdErrPath != null)
             {
                 var mode = config.AppendStdErr ? FileMode.Append : FileMode.Create;
@@ -69,8 +60,7 @@ public class PipelineExecutor
                 errorStream = Console.OpenStandardError();
             }
 
-            // 4. Create Command
-            // We handle the creation logic here to catch errors per-command
+            // Command Creation
             ICommand command;
             try
             {
@@ -82,12 +72,10 @@ public class PipelineExecutor
                 continue;
             }
 
-            // Capture context for the Task closure
             Stream currentIn = sourceStream;
             Stream currentOut = destStream;
             Stream currentErr = errorStream;
 
-            // 5. Run Command Asynchronously
             tasks.Add(Task.Run(async () =>
             {
                 try
@@ -96,43 +84,35 @@ public class PipelineExecutor
                 }
                 catch (Exception ex)
                 {
-                    // Ensure errors in async tasks are reported
                     Console.Error.WriteLine($"{cmdName}: {ex.Message}");
                 }
                 finally
                 {
-                    // CRITICAL: Close pipes when done writing so the next command knows data ended.
-                    // Do NOT close Console.Out/Error
-                    if (currentOut is PipeStream || currentOut is FileStream)
-                    {
-                        currentOut.Dispose();
-                    }
-                    if (currentErr is FileStream)
-                    {
-                        currentErr.Dispose();
-                    }
-                    // We don't dispose currentIn here usually, as it's owned by the previous pipe's creator 
-                    // or it is the Client end of the pipe.
-                    if (currentIn is PipeStream)
-                    {
-                        currentIn.Dispose();
-                    }
+                    // Clean up output/error streams owned by this command
+                    if (currentOut is PipeStream || currentOut is FileStream) currentOut.Dispose();
+                    if (currentErr is FileStream) currentErr.Dispose();
+
+                    // Clean up input stream if it was a client pipe created in previous loop
+                    if (currentIn is PipeStream) currentIn.Dispose();
                 }
             }));
 
-            // 6. Setup Input for NEXT command
+            // Prepare Input for NEXT command
             if (!isLast && destStream is AnonymousPipeServerStream pipeServer)
             {
-                // create the "Read" end of the pipe for the next command
+                // Create the client (Reader) handle
                 var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
+
+                // CRITICAL FIX: Release the server's copy of the client handle.
+                // This ensures the reader detects EOF correctly when the writer (server) closes.
+                pipeServer.DisposeLocalCopyOfClientHandle();
+
                 sourceStream = pipeClient;
             }
         }
 
-        // Wait for all pipeline stages to finish
         await Task.WhenAll(tasks);
 
-        // Cleanup Server Pipes (Client pipes disposed in tasks)
         foreach (var p in pipes) p.Dispose();
     }
 
