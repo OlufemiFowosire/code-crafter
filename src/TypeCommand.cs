@@ -17,7 +17,7 @@ internal class TypeCommand(Dictionary<string, int> builtins) : IBuiltinCommand
             }
             if (path != null)
             {
-                Console.WriteLine($"{args[0]} is an external command");
+                Console.WriteLine($"{args[0]} is {path}");
                 return;
             }
             throw new ArgumentException($"{args[0]}: not found");
