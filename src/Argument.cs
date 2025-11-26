@@ -1,8 +1,9 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 internal class Argument
 {
-    public static string[] Parse(string input)
+    /* public static string[] Parse(string input)
     {
         // Regex Breakdown:
         // 1. [^\s"']+    -> Matches unquoted text (stops at space or quotes)
@@ -25,5 +26,83 @@ internal class Argument
                             })
                             .ToArray();
         return args;
+    } */
+    public static string[] Parse(string commandLine)
+    {
+        var args = new List<string>();
+        var currentArg = new StringBuilder();
+        bool inSingleQuotes = false;
+        bool inDoubleQuotes = false;
+
+        // This flag tracks if we are currently building an argument. 
+        // It is necessary to distinguish between an empty string "" and "nothing".
+        // e.g. echo " " -> 1 arg. echo -> 0 args.
+        bool parsingArg = false;
+
+        for (int i = 0; i < commandLine.Length; i++)
+        {
+            char c = commandLine[i];
+
+            if (inSingleQuotes)
+            {
+                if (c == '\'')
+                {
+                    inSingleQuotes = false;
+                }
+                else
+                {
+                    currentArg.Append(c);
+                }
+            }
+            else if (inDoubleQuotes)
+            {
+                if (c == '"')
+                {
+                    inDoubleQuotes = false;
+                }
+                // (Optional) Handle backslash logic here for later steps
+                // else if (c == '\\' && i + 1 < commandLine.Length && ...)
+                else
+                {
+                    currentArg.Append(c);
+                }
+            }
+            else
+            {
+                // UNQUOTED STATE
+                if (char.IsWhiteSpace(c))
+                {
+                    if (parsingArg)
+                    {
+                        args.Add(currentArg.ToString());
+                        currentArg.Clear();
+                        parsingArg = false;
+                    }
+                }
+                else if (c == '\'')
+                {
+                    inSingleQuotes = true;
+                    parsingArg = true; // We found a quote, so we are definitely parsing an arg
+                }
+                else if (c == '"')
+                {
+                    inDoubleQuotes = true;
+                    parsingArg = true;
+                }
+                else
+                {
+                    currentArg.Append(c);
+                    parsingArg = true;
+                }
+            }
+        }
+
+        // If we have leftover data in the buffer after the loop ends, add it.
+        if (parsingArg)
+        {
+            args.Add(currentArg.ToString());
+        }
+
+        return args.ToArray();
     }
 }
