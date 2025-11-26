@@ -15,7 +15,7 @@ class Program
                 string? input = Console.ReadLine()?.Trim();
 
 
-                string[] tokens = Argument.Parse(input!);
+                string[] tokens = ShellParser.Parse(input!);
                 string command = tokens[0];
                 CommandsFactory.Handle(command, tokens.Skip(1).ToArray());
             }
