@@ -19,13 +19,13 @@ class Program
                 string command = tokens[0];
                 CommandsFactory.Handle(command, tokens.Skip(1).ToArray());
             }
-            catch (DirectoryNotFoundException path)
+            catch (DirectoryNotFoundException d)
             {
-                Console.WriteLine($"cd: {path}: No such file or directory");
+                Console.WriteLine($"{d.Message}");
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException a)
             {
-                Console.WriteLine($"{ex.Message}");
+                Console.WriteLine($"{a.Message}");
             }
             catch (Exception ex)
             {
