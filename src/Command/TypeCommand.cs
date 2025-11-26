@@ -1,37 +1,28 @@
-internal class TypeCommand(Dictionary<string, int> builtins) : IBuiltinCommand
+public class TypeCommand : IBuiltinCommand
 {
-    public string Name { get; } = "type";
+    public string Name => "type";
+
     public void Execute(string[] args)
     {
-        string? path = ExecutableDirectories.GetProgramPath(args[0]);
-        try
+        if (args.Length == 0) return;
+
+        string target = args[0];
+
+        // 1. Query the Registry (Zero allocation lookup)
+        if (CommandRegistry.IsBuiltin(target))
         {
-            if (args.Length == 0)
-            {
-                throw new ArgumentException("type: not enough arguments");
-            }
-            if (builtins.ContainsKey(args[0]))
-            {
-                Console.WriteLine($"{args[0]} is a shell builtin");
-                return;
-            }
-            if (path != null)
-            {
-                Console.WriteLine($"{args[0]} is {path}");
-                return;
-            }
-            throw new ArgumentException($"{args[0]}: not found");
+            Console.WriteLine($"{target} is a shell builtin");
+            return;
         }
-        catch (ArgumentException)
+
+        // 2. Check File System
+        string? path = ExecutableDirectories.GetProgramPath(target);
+        if (path is not null)
         {
-            throw;
+            Console.WriteLine($"{target} is {path}");
+            return;
         }
+
+        Console.WriteLine($"{target}: not found");
     }
-
-    public Dictionary<string, int> Builtins
-    {
-        get { return builtins; }
-    }
-
-
 }

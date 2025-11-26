@@ -8,16 +8,28 @@ class Program
         {
             // TODO: Uncomment the code below to pass the first stage
             Console.Write("$ ");
+            // Captures the user's command in the "command" variable
+            string? input = Console.ReadLine()?.Trim();
+            // Use your existing quote parser to split string
+            string[] rawArgs = ShellParser.Parse(input!);
 
             try
             {
-                // Captures the user's command in the "command" variable
-                string? input = Console.ReadLine()?.Trim();
+                // 3. Extract Redirection info using the new Parser
+                RedirectionConfig config = RedirectionParser.Parse(rawArgs);
 
+                if (config.Arguments.Count == 0) continue;
 
-                string[] tokens = ShellParser.Parse(input!);
-                string command = tokens[0];
-                CommandsFactory.Handle(command, tokens.Skip(1).ToArray());
+                string cmdName = config.Arguments[0];
+                string[] cmdArgs = config.Arguments.Skip(1).ToArray();
+
+                // 4. Execute
+                ICommand command = CommandFactory.Create(cmdName);
+
+                using (new OutputRedirectionContext(config))
+                {
+                    command.Execute(cmdArgs);
+                }
             }
             catch (DirectoryNotFoundException d)
             {

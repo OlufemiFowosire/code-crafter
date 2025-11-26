@@ -1,48 +1,53 @@
 using System.Diagnostics;
+
 internal class ExternalCommand(string commandName) : ICommand
 {
-    public string Name { get; } = "external";
+    public string Name { get; } = commandName;
+
     public void Execute(string[] args)
     {
-        //Console.WriteLine($"Executing external command...{commandName}");
         string? path = ExecutableDirectories.GetProgramPath(commandName);
-        //Console.WriteLine($"Path found: {path}");
-        if (path != null)
-        {
-            /* var process = new Process();
-            process.StartInfo.FileName = commandName;
-            process.StartInfo.Arguments = string.Join(" ", args);
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = false;
-            process.StartInfo.RedirectStandardError = false;
-            process.Start();
-            process.WaitForExit();
-            Console.WriteLine($"{commandName} is {path}");
-            return process.ExitCode; */
-            var processInfo = new ProcessStartInfo
-            {
-                FileName = commandName,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
 
-            // CORRECT WAY: Add arguments one by one. 
-            // .NET handles spaces/escaping automatically here.
-            foreach (var arg in args)
-            {
-                processInfo.ArgumentList.Add(arg);
-            }
-            var process = Process.Start(processInfo);
-
-            // Ensure we capture output to print it to the shell
-            process!.WaitForExit();
-            Console.Write(process.StandardOutput.ReadToEnd());
-            Console.Write(process.StandardError.ReadToEnd());
-        }
-        else
+        if (path == null)
         {
             Console.WriteLine($"{commandName}: command not found");
+            return;
         }
+
+        var processInfo = new ProcessStartInfo
+        {
+            FileName = path, // FIX: Use the resolved full path
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        foreach (var arg in args)
+        {
+            processInfo.ArgumentList.Add(arg);
+        }
+
+        using var process = new Process { StartInfo = processInfo };
+
+        // FIX: Handle output asynchronously to prevent deadlocks 
+        // and allow real-time printing.
+        process.OutputDataReceived += (sender, e) =>
+        {
+            if (e.Data != null) Console.WriteLine(e.Data);
+        };
+
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (e.Data != null) Console.WriteLine(e.Data);
+        };
+
+        process.Start();
+
+        // Start listening to the streams
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        process.WaitForExit();
     }
 }
