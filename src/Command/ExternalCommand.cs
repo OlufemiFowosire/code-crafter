@@ -32,9 +32,6 @@ internal class ExternalCommand(string commandName) : ICommand
 
         using var process = new Process { StartInfo = startInfo };
 
-        // Pass through environment variables if needed
-        // startInfo.Environment["TERM"] = "xterm-256color";
-
         try
         {
             process.Start();
@@ -62,14 +59,23 @@ internal class ExternalCommand(string commandName) : ICommand
             // 2. Pump Output (Process -> Shell)
             ioTasks.Add(Task.Run(async () =>
             {
-                try { await process.StandardOutput.BaseStream.CopyToAsync(stdout); }
+                try
+                {
+                    await process.StandardOutput.BaseStream.CopyToAsync(stdout);
+                    // CRITICAL FIX: Force the buffer to write to the pipe immediately
+                    await stdout.FlushAsync();
+                }
                 catch (IOException) { }
             }));
 
             // 3. Pump Error (Process -> Shell)
             ioTasks.Add(Task.Run(async () =>
             {
-                try { await process.StandardError.BaseStream.CopyToAsync(stderr); }
+                try
+                {
+                    await process.StandardError.BaseStream.CopyToAsync(stderr);
+                    await stderr.FlushAsync();
+                }
                 catch (IOException) { }
             }));
 
@@ -82,6 +88,7 @@ internal class ExternalCommand(string commandName) : ICommand
             // Write to the error stream provided by the pipeline
             using var writer = new StreamWriter(stderr, leaveOpen: true);
             await writer.WriteLineAsync($"{commandName}: {ex.Message}");
+            await writer.FlushAsync();
         }
     }
 }
