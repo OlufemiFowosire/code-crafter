@@ -37,9 +37,10 @@ internal class ExternalCommand(string commandName) : ICommand
             if (e.Data != null) Console.WriteLine(e.Data);
         };
 
+        // FIXED: This pipes Error -> Error -> Terminal
         process.ErrorDataReceived += (sender, e) =>
         {
-            if (e.Data != null) Console.WriteLine(e.Data);
+            if (e.Data != null) Console.Error.WriteLine(e.Data);
         };
 
         process.Start();
