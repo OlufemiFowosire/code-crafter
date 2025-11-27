@@ -16,7 +16,7 @@ public class PipelineExecutor
         var pipes = new List<AnonymousPipeServerStream>();
 
         // FIX 1: Start with Console Input (allows interactive commands like 'cat' to work)
-        Stream? sourceStream = Stream.Null;
+        Stream? sourceStream = null;
 
         for (int i = 0; i < segments.Count; i++)
         {
@@ -30,8 +30,8 @@ public class PipelineExecutor
             string cmdName = config.Arguments[0];
             string[] cmdArgs = config.Arguments.Skip(1).ToArray();
 
-            Stream destStream;
-            Stream errorStream;
+            Stream? destStream = null;
+            Stream? errorStream = null;
 
             // Track if we created these streams so we know if we should dispose them
             bool shouldDisposeOut = false;
@@ -47,7 +47,7 @@ public class PipelineExecutor
             else if (isLast)
             {
                 // Do not mark this for disposal!
-                destStream = Console.OpenStandardOutput();
+                destStream = null; // Console Output
             }
             else
             {
@@ -66,7 +66,7 @@ public class PipelineExecutor
             }
             else
             {
-                errorStream = Console.OpenStandardError();
+                errorStream = null; // Console Error
             }
 
             // Command Creation
@@ -81,9 +81,9 @@ public class PipelineExecutor
                 continue;
             }
 
-            Stream currentIn = sourceStream;
-            Stream currentOut = destStream;
-            Stream currentErr = errorStream;
+            Stream? currentIn = sourceStream;
+            Stream? currentOut = destStream;
+            Stream? currentErr = errorStream;
 
             tasks.Add(Task.Run(async () =>
             {
@@ -98,8 +98,8 @@ public class PipelineExecutor
                 finally
                 {
                     // FIX 2: Only dispose streams we explicitly flagged
-                    if (shouldDisposeOut) currentOut.Dispose();
-                    if (shouldDisposeErr) currentErr.Dispose();
+                    if (shouldDisposeOut && currentOut != null) currentOut.Dispose();
+                    if (shouldDisposeErr && currentErr != null) currentErr.Dispose();
 
                     // Clean up input stream if it was a client pipe created in previous loop
                     if (currentIn is PipeStream) currentIn.Dispose();
@@ -121,7 +121,7 @@ public class PipelineExecutor
                 else
                 {
                     // FIX 3: Break the chain if redirecting to file
-                    sourceStream = Stream.Null;
+                    sourceStream = null;
                 }
             }
         }

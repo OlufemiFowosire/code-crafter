@@ -10,18 +10,16 @@ internal class ExternalCommand(string commandName) : ICommand
 {
     public string Name { get; } = commandName;
 
-    public async Task ExecuteAsync(string[] args, Stream? stdin, Stream stdout, Stream stderr)
+    public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
         string? fullPath = ExecutableDirectories.GetProgramPath(commandName);
-        if (fullPath == null) throw new Win32Exception($"{commandName}: command not found");
-
         var startInfo = new ProcessStartInfo
         {
-            FileName = fullPath,
+            FileName = fullPath ?? commandName,
             UseShellExecute = false,
             // FIX: Only redirect input if we were given a specific stream (like a pipe).
             // If stdin is null, we inherit the Console input directly.
-            RedirectStandardInput = (stdin != Stream.Null),
+            RedirectStandardInput = stdin != null,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true
@@ -54,23 +52,25 @@ internal class ExternalCommand(string commandName) : ICommand
             }
 
             // 2. Pump Output
+            Stream targetOut = stdout ?? Console.OpenStandardOutput();
             outputTasks.Add(Task.Run(async () =>
             {
                 try
                 {
-                    await process.StandardOutput.BaseStream.CopyToAsync(stdout);
-                    await stdout.FlushAsync();
+                    await process.StandardOutput.BaseStream.CopyToAsync(targetOut);
+                    await targetOut.FlushAsync();
                 }
                 catch (IOException) { }
             }));
 
             // 3. Pump Error
+            Stream targetErr = stderr ?? Console.OpenStandardError();
             outputTasks.Add(Task.Run(async () =>
             {
                 try
                 {
-                    await process.StandardError.BaseStream.CopyToAsync(stderr);
-                    await stderr.FlushAsync();
+                    await process.StandardError.BaseStream.CopyToAsync(targetErr);
+                    await targetErr.FlushAsync();
                 }
                 catch (IOException) { }
             }));
@@ -80,7 +80,8 @@ internal class ExternalCommand(string commandName) : ICommand
         }
         catch (Win32Exception ex)
         {
-            using var writer = new StreamWriter(stderr, leaveOpen: true);
+            Stream target = stderr ?? Console.OpenStandardError();
+            using var writer = new StreamWriter(target, leaveOpen: true);
             await writer.WriteLineAsync($"{ex.Message}");
             await writer.FlushAsync();
         }

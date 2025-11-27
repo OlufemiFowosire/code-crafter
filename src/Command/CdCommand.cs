@@ -6,7 +6,7 @@ internal class CdCommand : IBuiltinCommand
 {
     public string Name { get; } = "cd";
 
-    public Task ExecuteAsync(string[] args, Stream? stdin, Stream stdout, Stream stderr)
+    public Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
         try
         {
