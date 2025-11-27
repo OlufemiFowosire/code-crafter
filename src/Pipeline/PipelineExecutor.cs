@@ -51,7 +51,7 @@ public class PipelineExecutor
             }
             else
             {
-                var pipe = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
+                var pipe = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.None);
                 pipes.Add(pipe);
                 destStream = pipe;
                 shouldDisposeOut = true; // We created a pipe, we must close it
@@ -113,11 +113,10 @@ public class PipelineExecutor
                 {
                     var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
 
-                    sourceStream = pipeClient;
-
                     // Critical: Release server handle
-                    pipeServer.DisposeLocalCopyOfClientHandle();
+                    //pipeServer.DisposeLocalCopyOfClientHandle();
 
+                    sourceStream = pipeClient;
                 }
                 else
                 {
