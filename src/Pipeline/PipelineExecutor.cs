@@ -15,11 +15,13 @@ public class PipelineExecutor
         var tasks = new List<Task>();
         var pipes = new List<AnonymousPipeServerStream>();
 
-        Stream sourceStream = Stream.Null;
+        // FIX 1: Start with Console Input (allows interactive commands like 'cat' to work)
+        Stream sourceStream = Console.OpenStandardInput();
 
         for (int i = 0; i < segments.Count; i++)
         {
             var segmentArgs = segments[i];
+            bool isLast = (i == segments.Count - 1);
 
             RedirectionConfig config = RedirectionParser.Parse(segmentArgs);
 
@@ -29,17 +31,22 @@ public class PipelineExecutor
             string[] cmdArgs = config.Arguments.Skip(1).ToArray();
 
             Stream destStream;
-            bool isLast = (i == segments.Count - 1);
             Stream errorStream;
+
+            // Track if we created these streams so we know if we should dispose them
+            bool shouldDisposeOut = false;
+            bool shouldDisposeErr = false;
 
             // Output Stream Setup
             if (config.StdOutPath != null)
             {
                 var mode = config.AppendStdOut ? FileMode.Append : FileMode.Create;
                 destStream = new FileStream(config.StdOutPath, mode, FileAccess.Write);
+                shouldDisposeOut = true; // We opened a file, we must close it
             }
             else if (isLast)
             {
+                // Do not mark this for disposal!
                 destStream = Console.OpenStandardOutput();
             }
             else
@@ -47,6 +54,7 @@ public class PipelineExecutor
                 var pipe = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
                 pipes.Add(pipe);
                 destStream = pipe;
+                shouldDisposeOut = true; // We created a pipe, we must close it
             }
 
             // Error Stream Setup
@@ -54,6 +62,7 @@ public class PipelineExecutor
             {
                 var mode = config.AppendStdErr ? FileMode.Append : FileMode.Create;
                 errorStream = new FileStream(config.StdErrPath, mode, FileAccess.Write);
+                shouldDisposeErr = true;
             }
             else
             {
@@ -88,9 +97,9 @@ public class PipelineExecutor
                 }
                 finally
                 {
-                    // Clean up output/error streams owned by this command
-                    if (currentOut is PipeStream || currentOut is FileStream) currentOut.Dispose();
-                    if (currentErr is FileStream) currentErr.Dispose();
+                    // FIX 2: Only dispose streams we explicitly flagged
+                    if (shouldDisposeOut) currentOut.Dispose();
+                    if (shouldDisposeErr) currentErr.Dispose();
 
                     // Clean up input stream if it was a client pipe created in previous loop
                     if (currentIn is PipeStream) currentIn.Dispose();
@@ -102,22 +111,20 @@ public class PipelineExecutor
             {
                 if (destStream is AnonymousPipeServerStream pipeServer)
                 {
-                    // Create the client (Reader) handle
                     var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
 
-                    // RESTORED: This is critical. It releases the server's reference to the client handle.
-                    // Without this, the pipe state may not correctly signal EOF to the reader when the server closes.
+                    // Critical: Release server handle
                     pipeServer.DisposeLocalCopyOfClientHandle();
 
                     sourceStream = pipeClient;
                 }
                 else
                 {
+                    // FIX 3: Break the chain if redirecting to file
                     sourceStream = Stream.Null;
                 }
             }
         }
-
 
         await Task.WhenAll(tasks);
 
