@@ -12,10 +12,9 @@ internal class ExternalCommand(string commandName) : ICommand
 
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
-        string? fullPath = ExecutableDirectories.GetProgramPath(commandName);
         var startInfo = new ProcessStartInfo
         {
-            FileName = fullPath ?? commandName,
+            FileName = commandName,
             UseShellExecute = false,
             // FIX: Only redirect input if we were given a specific stream (like a pipe).
             // If stdin is null, we inherit the Console input directly.
