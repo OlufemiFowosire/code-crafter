@@ -16,7 +16,7 @@ public class PipelineExecutor
         var pipes = new List<AnonymousPipeServerStream>();
 
         // FIX 1: Start with Console Input (allows interactive commands like 'cat' to work)
-        Stream sourceStream = Console.OpenStandardInput();
+        Stream? sourceStream = null;
 
         for (int i = 0; i < segments.Count; i++)
         {
@@ -93,7 +93,7 @@ public class PipelineExecutor
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"{cmdName}: {ex.Message}");
+                    Console.Error.WriteLine($"{ex.Message}");
                 }
                 finally
                 {
@@ -126,6 +126,7 @@ public class PipelineExecutor
             }
         }
 
+        // Wait for all commands to complete
         await Task.WhenAll(tasks);
 
         foreach (var p in pipes) p.Dispose();

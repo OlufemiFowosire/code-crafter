@@ -6,7 +6,7 @@ public class TypeCommand : IBuiltinCommand
 {
     public string Name => "type";
 
-    public async Task ExecuteAsync(string[] args, Stream stdin, Stream stdout, Stream stderr)
+    public async Task ExecuteAsync(string[] args, Stream? stdin, Stream stdout, Stream stderr)
     {
         using var writer = new StreamWriter(stdout, leaveOpen: true);
 

@@ -1,29 +1,17 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes; // Added for PipeStream check
-using System.Threading.Tasks;
 
 internal class ExternalCommand(string commandName) : ICommand
 {
     public string Name { get; } = commandName;
 
-    public async Task ExecuteAsync(string[] args, Stream stdin, Stream stdout, Stream stderr)
+    public async Task ExecuteAsync(string[] args, Stream? stdin, Stream stdout, Stream stderr)
     {
-        // Resolve full path (using your existing logic)
-        string? fullPath = ExecutableDirectories.GetProgramPath(commandName);
-        if (fullPath == null)
-        {
-            throw new Win32Exception($"{commandName}: command not found");
-        }
-
         var startInfo = new ProcessStartInfo
         {
-            FileName = fullPath,
+            FileName = commandName,
             UseShellExecute = false,
-            RedirectStandardInput = true,
+            RedirectStandardInput = (stdin != null),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true
@@ -37,10 +25,12 @@ internal class ExternalCommand(string commandName) : ICommand
         {
             process.Start();
 
-            var ioTasks = new List<Task>();
+            // We track Output/Error tasks to ensure we capture all text.
+            var outputTasks = new List<Task>();
 
-            // 1. Pump Input (Shell -> Process)
-            ioTasks.Add(Task.Run(async () =>
+            // 1. Pump Input (Fire and Forget)
+            // Do NOT add this to outputTasks. We don't want to wait for it.
+            _ = Task.Run(async () =>
             {
                 if (stdin != Stream.Null)
                 {
@@ -48,51 +38,48 @@ internal class ExternalCommand(string commandName) : ICommand
                     {
                         await stdin.CopyToAsync(process.StandardInput.BaseStream);
                     }
-                    catch (IOException) { } // Broken pipe ignorable here
+                    catch (IOException) { }
                     finally { process.StandardInput.Close(); }
                 }
-            }));
+                else
+                {
+                    process.StandardInput.Close();
+                }
+            });
 
-            // 2. Pump Output (Process -> Shell)
-            ioTasks.Add(Task.Run(async () =>
+            // 2. Pump Output
+            outputTasks.Add(Task.Run(async () =>
             {
                 try
                 {
                     await process.StandardOutput.BaseStream.CopyToAsync(stdout);
-
-                    // CRITICAL FIX: Only flush if it is a Pipe. 
-                    // Flushing ConsoleStream (System.IO.Stream) can cause hangs/errors in test runners.
-                    if (stdout is PipeStream)
-                    {
-                        await stdout.FlushAsync();
-                    }
+                    // Force flush to ensure data is sent immediately
+                    await stdout.FlushAsync();
                 }
                 catch (IOException) { }
             }));
 
-            // 3. Pump Error (Process -> Shell)
-            ioTasks.Add(Task.Run(async () =>
+            // 3. Pump Error
+            outputTasks.Add(Task.Run(async () =>
             {
                 try
                 {
                     await process.StandardError.BaseStream.CopyToAsync(stderr);
-                    if (stderr is PipeStream)
-                    {
-                        await stderr.FlushAsync();
-                    }
+                    await stderr.FlushAsync();
                 }
                 catch (IOException) { }
             }));
 
-            // Wait for IO and Exit
-            await Task.WhenAll(ioTasks);
+            // A. Wait for the process to exit primarily
             await process.WaitForExitAsync();
+
+            // B. Then wait for the output streams to finish draining
+            await Task.WhenAll(outputTasks);
         }
         catch (Win32Exception ex)
         {
-            // Write to the error stream provided by the pipeline
             using var writer = new StreamWriter(stderr, leaveOpen: true);
-            await writer.WriteLineAsync($"{commandName}: {ex.Message}");
+            await writer.WriteLineAsync($"{ex.Message}");
             await writer.FlushAsync();
         }
     }

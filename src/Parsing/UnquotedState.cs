@@ -5,6 +5,7 @@ public class UnquotedState : SingletonState<UnquotedState>
     protected override Dictionary<char, ICharAction> ActionMap { get; } = new()
     {
         { ' ',  Actions.Commit },
+        { '|',  Actions.Operator }, // [NEW] Handle pipe
         { '\\', Actions.EscapeAll },
         { '\'', new TransitionAction(() => SingleQuoteState.Instance) },
         { '"',  new TransitionAction(() => DoubleQuoteState.Instance) }

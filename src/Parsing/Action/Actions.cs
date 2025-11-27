@@ -4,12 +4,11 @@ public static class Actions
     // A. Simple Actions
     public static readonly ICharAction Append = new AppendAction();
     public static readonly ICharAction Commit = new CommitAction();
+    // [NEW] Operator Action for delimiters
+    public static readonly ICharAction Operator = new OperatorAction();
 
-    // B. Complex Actions (Pre-configured)
-    // Mode: Escape everything (Unquoted)
+    // B. Complex Actions
     public static readonly ICharAction EscapeAll = new EscapeAction(alwaysEscape: true);
-
-    // Mode: Escape only " and \ (Double Quoted)
     public static readonly ICharAction EscapeComplex = new EscapeAction(alwaysEscape: false, '\\', '"');
 
     // Internal Implementations
@@ -21,6 +20,17 @@ public static class Actions
     private class CommitAction : ICharAction
     {
         public void Execute(ParserContext ctx, char c) => ctx.CommitArg();
+    }
+
+    // [NEW] Handles delimiters (like |)
+    private class OperatorAction : ICharAction
+    {
+        public void Execute(ParserContext ctx, char c)
+        {
+            ctx.CommitArg(); // Commit previous token (e.g. "cat")
+            ctx.Append(c);   // Add operator
+            ctx.CommitArg(); // Commit operator (e.g. "|")
+        }
     }
 
     private class EscapeAction : ICharAction
@@ -39,12 +49,12 @@ public static class Actions
             char next = ctx.Peek();
             if (_alwaysEscape || (_targets != null && _targets.Contains(next)))
             {
-                ctx.Consume(); // Eat backslash target
+                ctx.Consume();
                 ctx.Append(next);
             }
             else
             {
-                ctx.Append(c); // Treat backslash as literal
+                ctx.Append(c);
             }
         }
     }

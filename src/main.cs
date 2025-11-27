@@ -31,23 +31,28 @@ class Program
             try
             {
                 // 1. Parse into tokens (preserves quotes)
+                // It uses spaces to split, but keeps quoted sections together
                 string[] allTokens = ShellParser.Parse(input!);
 
                 // 2. Execute Pipeline
                 // This handles Splitting by '|', Redirection, and Execution internally
                 await pipelineExecutor.ExecutePipelineAsync(allTokens);
             }
-            catch (DirectoryNotFoundException d)
+            catch (DirectoryNotFoundException directoryEx)
             {
-                Console.WriteLine($"{d.Message}");
+                Console.WriteLine($"{directoryEx.Message}");
             }
-            catch (ArgumentException a)
+            catch (ArgumentException argEx)
+            {
+                Console.WriteLine($"{argEx.Message}");
+            }
+            catch (AggregateException a)
             {
                 Console.WriteLine($"{a.Message}");
             }
-            catch (Win32Exception w)
+            catch (Win32Exception windowsEx)
             {
-                Console.WriteLine($"{w.Message}");
+                Console.WriteLine($"{windowsEx.Message}");
             }
             catch (Exception ex)
             {
