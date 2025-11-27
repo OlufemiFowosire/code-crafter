@@ -98,18 +98,26 @@ public class PipelineExecutor
             }));
 
             // Prepare Input for NEXT command
-            if (!isLast && destStream is AnonymousPipeServerStream pipeServer)
+            if (!isLast)
             {
-                // Create the client (Reader) handle
-                var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
+                if (destStream is AnonymousPipeServerStream pipeServer)
+                {
+                    // Create the client (Reader) handle
+                    var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
 
-                // RESTORED: This is critical. It releases the server's reference to the client handle.
-                // Without this, the pipe state may not correctly signal EOF to the reader when the server closes.
-                pipeServer.DisposeLocalCopyOfClientHandle();
+                    // RESTORED: This is critical. It releases the server's reference to the client handle.
+                    // Without this, the pipe state may not correctly signal EOF to the reader when the server closes.
+                    pipeServer.DisposeLocalCopyOfClientHandle();
 
-                sourceStream = pipeClient;
+                    sourceStream = pipeClient;
+                }
+                else
+                {
+                    sourceStream = Stream.Null;
+                }
             }
         }
+
 
         await Task.WhenAll(tasks);
 
