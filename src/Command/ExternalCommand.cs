@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
+using System.Threading.Tasks;
 
 internal class ExternalCommand(string commandName) : ICommand
 {
@@ -7,11 +12,16 @@ internal class ExternalCommand(string commandName) : ICommand
 
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream stdout, Stream stderr)
     {
+        string? fullPath = ExecutableDirectories.GetProgramPath(commandName);
+        if (fullPath == null) throw new Win32Exception($"{commandName}: command not found");
+
         var startInfo = new ProcessStartInfo
         {
-            FileName = commandName,
+            FileName = fullPath,
             UseShellExecute = false,
-            RedirectStandardInput = (stdin != null),
+            // FIX: Only redirect input if we were given a specific stream (like a pipe).
+            // If stdin is null, we inherit the Console input directly.
+            RedirectStandardInput = (stdin != Stream.Null),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true
@@ -25,27 +35,23 @@ internal class ExternalCommand(string commandName) : ICommand
         {
             process.Start();
 
-            // We track Output/Error tasks to ensure we capture all text.
             var outputTasks = new List<Task>();
 
-            // 1. Pump Input (Fire and Forget)
-            // Do NOT add this to outputTasks. We don't want to wait for it.
-            _ = Task.Run(async () =>
+            // 1. Pump Input (Only if redirected)
+            if (stdin != null)
             {
-                if (stdin != Stream.Null)
+                // We fire-and-forget this because we can't easily wait for it if the source is infinite
+                _ = Task.Run(async () =>
                 {
                     try
                     {
-                        await stdin.CopyToAsync(process.StandardInput.BaseStream);
+                        if (stdin != Stream.Null)
+                            await stdin.CopyToAsync(process.StandardInput.BaseStream);
                     }
                     catch (IOException) { }
                     finally { process.StandardInput.Close(); }
-                }
-                else
-                {
-                    process.StandardInput.Close();
-                }
-            });
+                });
+            }
 
             // 2. Pump Output
             outputTasks.Add(Task.Run(async () =>
@@ -53,7 +59,6 @@ internal class ExternalCommand(string commandName) : ICommand
                 try
                 {
                     await process.StandardOutput.BaseStream.CopyToAsync(stdout);
-                    // Force flush to ensure data is sent immediately
                     await stdout.FlushAsync();
                 }
                 catch (IOException) { }
@@ -70,10 +75,7 @@ internal class ExternalCommand(string commandName) : ICommand
                 catch (IOException) { }
             }));
 
-            // A. Wait for the process to exit primarily
             await process.WaitForExitAsync();
-
-            // B. Then wait for the output streams to finish draining
             await Task.WhenAll(outputTasks);
         }
         catch (Win32Exception ex)

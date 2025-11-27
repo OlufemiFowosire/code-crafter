@@ -16,7 +16,7 @@ public class PipelineExecutor
         var pipes = new List<AnonymousPipeServerStream>();
 
         // FIX 1: Start with Console Input (allows interactive commands like 'cat' to work)
-        Stream? sourceStream = null;
+        Stream? sourceStream = Stream.Null;
 
         for (int i = 0; i < segments.Count; i++)
         {
