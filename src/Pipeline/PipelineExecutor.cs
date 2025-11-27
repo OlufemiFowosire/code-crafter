@@ -15,7 +15,7 @@ public class PipelineExecutor
         var tasks = new List<Task>();
         var pipes = new List<AnonymousPipeServerStream>();
 
-        Stream sourceStream = Console.OpenStandardInput();
+        Stream sourceStream = Stream.Null;
 
         for (int i = 0; i < segments.Count; i++)
         {
