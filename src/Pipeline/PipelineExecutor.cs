@@ -114,7 +114,7 @@ public class PipelineExecutor
                     var pipeClient = new AnonymousPipeClientStream(PipeDirection.In, pipeServer.GetClientHandleAsString());
 
                     // Critical: Release server handle
-                    pipeServer.DisposeLocalCopyOfClientHandle();
+                    //pipeServer.DisposeLocalCopyOfClientHandle();
 
                     sourceStream = pipeClient;
                 }
