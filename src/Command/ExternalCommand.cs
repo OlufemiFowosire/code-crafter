@@ -40,9 +40,9 @@ internal class ExternalCommand(string commandName) : ICommand
             var ioTasks = new List<Task>();
 
             // 1. Pump Input (Shell -> Process)
-            if (stdin != Stream.Null)
+            ioTasks.Add(Task.Run(async () =>
             {
-                ioTasks.Add(Task.Run(async () =>
+                if (stdin != Stream.Null)
                 {
                     try
                     {
@@ -50,12 +50,8 @@ internal class ExternalCommand(string commandName) : ICommand
                     }
                     catch (IOException) { } // Broken pipe ignorable here
                     finally { process.StandardInput.Close(); }
-                }));
-            }
-            else
-            {
-                process.StandardInput.Close();
-            }
+                }
+            }));
 
             // 2. Pump Output (Process -> Shell)
             ioTasks.Add(Task.Run(async () =>

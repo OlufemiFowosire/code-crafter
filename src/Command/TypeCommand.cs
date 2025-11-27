@@ -23,12 +23,12 @@ public class TypeCommand : IBuiltinCommand
 
         // 2. Check File System
         string? path = ExecutableDirectories.GetProgramPath(target);
-        if (path is not null)
+        if (path is null)
         {
-            await writer.WriteLineAsync($"{target} is {path}");
+            await writer.WriteLineAsync($"{target}: not found");
             return;
         }
 
-        await writer.WriteLineAsync($"{target}: not found");
+        await writer.WriteLineAsync($"{target} is {path}");
     }
 }

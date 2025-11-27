@@ -15,12 +15,11 @@ public class PipelineExecutor
         var tasks = new List<Task>();
         var pipes = new List<AnonymousPipeServerStream>();
 
-        Stream sourceStream = Stream.Null;
+        Stream sourceStream = Console.OpenStandardInput();
 
         for (int i = 0; i < segments.Count; i++)
         {
             var segmentArgs = segments[i];
-            bool isLast = (i == segments.Count - 1);
 
             RedirectionConfig config = RedirectionParser.Parse(segmentArgs);
 
@@ -30,6 +29,7 @@ public class PipelineExecutor
             string[] cmdArgs = config.Arguments.Skip(1).ToArray();
 
             Stream destStream;
+            bool isLast = (i == segments.Count - 1);
             Stream errorStream;
 
             // Output Stream Setup
