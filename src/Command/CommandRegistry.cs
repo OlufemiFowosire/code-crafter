@@ -12,6 +12,7 @@ internal class CommandRegistry
         Register(new PwdCommand());
         Register(new CdCommand());
         Register(new TypeCommand());
+        Register(new HistoryCommand());
     }
 
     private static void Register(IBuiltinCommand command)

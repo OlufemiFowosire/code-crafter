@@ -13,8 +13,11 @@ public class LineEditor
         {
             { ConsoleKey.Enter,     new EnterHandler() },
             { ConsoleKey.Tab,       new TabHandler() },
-            { ConsoleKey.Backspace, new BackspaceHandler() }
+            { ConsoleKey.Backspace, new BackspaceHandler() },
             // Easy to extend: { ConsoleKey.LeftArrow, new LeftArrowHandler() }
+            // [NEW] Register History Handlers
+            { ConsoleKey.UpArrow,   new UpArrowHandler() },
+            { ConsoleKey.DownArrow, new DownArrowHandler() }
         };
 
         // 2. Register Default (Typing) Handler

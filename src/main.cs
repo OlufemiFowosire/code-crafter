@@ -18,6 +18,9 @@ class Program
         var engine = new CompletionEngine(sources);
         var lineEditor = new LineEditor(engine);
 
+        // [NEW] Save executed command to history
+        HistoryService.Instance.Add(lineEditor.ReadLine("$ "));
+
         // 2. Setup Pipeline Executor (New)
         var pipelineExecutor = new PipelineExecutor();
 

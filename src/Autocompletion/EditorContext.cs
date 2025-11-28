@@ -3,6 +3,8 @@ using System.Text;
 public class EditorContext
 {
     public StringBuilder Buffer { get; } = new();
+    // [NEW] Track current position in history. -1 means not navigating.
+    public int HistoryIndex { get; set; } = -1;
     public int TabCount { get; set; } = 0;
     public string Prompt { get; }
     public CompletionEngine Completer { get; }
@@ -13,8 +15,20 @@ public class EditorContext
         Completer = completer;
     }
 
-    // --- Output Helpers ---
+    // [NEW] Visual Helper to replace the entire line
+    public void ReplaceBuffer(string newText)
+    {
+        // 1. Visually erase current buffer
+        while (Buffer.Length > 0)
+        {
+            Backspace();
+        }
 
+        // 2. Append new text
+        Write(newText);
+    }
+
+    // --- Output Helpers ---
     public void Write(string text)
     {
         Console.Write(text);
