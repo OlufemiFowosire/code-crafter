@@ -4,31 +4,28 @@ internal class HistoryCommand : IBuiltinCommand
 
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
-        TextWriter writer;
-        bool isConsole = stdout == null;
+        // Default output stream
+        Stream target = stdout ?? Console.OpenStandardOutput();
+        using var writer = new StreamWriter(target, leaveOpen: true) { AutoFlush = true };
 
-        if (isConsole) writer = Console.Out;
-        else writer = new StreamWriter(stdout!, leaveOpen: true);
+        int limit = -1;
 
-        try
+        // Check for 'history <n>' syntax
+        if (args.Length > 0)
         {
-            int limit = -1;
-            if (args.Length > 0 && !int.TryParse(args[0], out limit))
+            if (!int.TryParse(args[0], out limit))
             {
                 await writer.WriteLineAsync($"history: invalid number argument: {args[0]}");
                 await writer.FlushAsync();
                 return;
             }
+        }
 
-            foreach (var (index, cmd) in HistoryService.Instance.GetEntries(limit))
-            {
-                await writer.WriteLineAsync($"{index,4}  {cmd}");
-            }
-            await writer.FlushAsync();
-        }
-        finally
+        foreach (var (index, cmd) in HistoryService.Instance.GetEntries(limit))
         {
-            if (!isConsole) writer.Dispose();
+            // Format: "  1  ls -la"
+            await writer.WriteLineAsync($"{index,4}  {cmd}");
         }
+        await writer.FlushAsync();
     }
 }

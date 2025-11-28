@@ -4,20 +4,15 @@ internal class EchoCommand : IBuiltinCommand
 
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
+        // Fallback to Console if stdout is null (Inherit)
+        Stream target = stdout ?? Console.OpenStandardOutput();
+        // We use StreamWriter to write text to the binary stream
+        using var writer = new StreamWriter(target, leaveOpen: true);
 
         string output = string.Join(" ", args);
-        if (stdout == null)
-        {
-            // Direct to Console (No Stream buffering issues)
-            await Console.Out.WriteLineAsync(output);
-            await Console.Out.FlushAsync();
-        }
-        else
-        {
-            // Use StreamWriter only for pipes/files
-            using var writer = new StreamWriter(stdout, leaveOpen: true);
-            await writer.WriteLineAsync(output);
-            await writer.FlushAsync();
-        }
+        await writer.WriteLineAsync(output);
+
+        // Flush is important in pipelines to push data to the next consumer
+        await writer.FlushAsync();
     }
 }
