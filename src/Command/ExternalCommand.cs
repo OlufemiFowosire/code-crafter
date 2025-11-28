@@ -79,10 +79,7 @@ internal class ExternalCommand(string commandName) : ICommand
         }
         catch (Win32Exception ex)
         {
-            Stream target = stderr ?? Console.OpenStandardError();
-            using var writer = new StreamWriter(target, leaveOpen: true);
-            await writer.WriteLineAsync($"{ex.Message}");
-            await writer.FlushAsync();
+            throw new Win32Exception($"{ex.Message}");
         }
     }
 }

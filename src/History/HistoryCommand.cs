@@ -6,7 +6,7 @@ internal class HistoryCommand : IBuiltinCommand
     {
         // Default output stream
         Stream target = stdout ?? Console.OpenStandardOutput();
-        using var writer = new StreamWriter(target, leaveOpen: true);
+        using var writer = new StreamWriter(target, leaveOpen: true) { AutoFlush = true };
 
         int limit = -1;
 
@@ -26,7 +26,6 @@ internal class HistoryCommand : IBuiltinCommand
             // Format: "  1  ls -la"
             await writer.WriteLineAsync($"{index,4}  {cmd}");
         }
-
         await writer.FlushAsync();
     }
 }

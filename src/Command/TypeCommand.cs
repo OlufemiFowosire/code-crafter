@@ -10,7 +10,7 @@ public class TypeCommand : IBuiltinCommand
     {
         // Fallback to Console if stdout is null (Inherit)
         Stream target = stdout ?? Console.OpenStandardOutput();
-        using var writer = new StreamWriter(target, leaveOpen: true);
+        using var writer = new StreamWriter(target, leaveOpen: true) { AutoFlush = true };
 
         if (args.Length == 0) return;
 
@@ -20,6 +20,8 @@ public class TypeCommand : IBuiltinCommand
         if (CommandRegistry.IsBuiltin(targetCommand))
         {
             await writer.WriteLineAsync($"{targetCommand} is a shell builtin");
+            // Option 2 (Recommended): Explicit Flush if not using AutoFlush
+            //await writer.FlushAsync();
             return;
         }
 
@@ -32,5 +34,8 @@ public class TypeCommand : IBuiltinCommand
         }
 
         await writer.WriteLineAsync($"{targetCommand} is {path}");
+        // Ensure all data is sent to the stream before disposing
+        // (AutoFlush=true handles this, but explicit FlushAsync is also good practice)
+        await writer.FlushAsync();
     }
 }
