@@ -17,6 +17,20 @@ class Program
         };
         var engine = new CompletionEngine(sources);
         var lineEditor = new LineEditor(engine);
+        // [NEW] Load History on Startup
+        string? histFile = Environment.GetEnvironmentVariable("HISTFILE");
+        if (!string.IsNullOrEmpty(histFile))
+        {
+            try
+            {
+                // This populates memory and sets the _persistedCount
+                await HistoryService.Instance.LoadAsync(histFile);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading history: {ex.Message}");
+            }
+        }
 
         // 2. Setup Pipeline Executor (New)
         var pipelineExecutor = new PipelineExecutor();
