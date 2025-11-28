@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 internal class CdCommand : IBuiltinCommand
 {
-    public string Name { get; } = "cd";
+    public string Name => "cd";
 
     public Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {

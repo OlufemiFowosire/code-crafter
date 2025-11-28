@@ -1,6 +1,6 @@
 internal class EchoCommand : IBuiltinCommand
 {
-    public string Name { get; } = "echo";
+    public string Name => "echo";
 
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {

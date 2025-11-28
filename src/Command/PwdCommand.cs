@@ -1,6 +1,6 @@
 internal class PwdCommand : IBuiltinCommand
 {
-    public string Name { get; } = "pwd";
+    public string Name => "pwd";
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
         // Fallback to Console if stdout is null (Inherit)

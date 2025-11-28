@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 internal class ExternalCommand(string commandName) : ICommand
 {
-    public string Name { get; } = commandName;
+    public string Name => commandName;
 
     public async Task ExecuteAsync(string[] args, Stream? stdin, Stream? stdout, Stream? stderr)
     {
